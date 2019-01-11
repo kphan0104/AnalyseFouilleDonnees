@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[16]:
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn as sk
@@ -71,4 +65,12 @@ def pihat(classId, dataList, labelList):
 def weighted_Sigma_Hat (sigma0, sigma1, nb_obs0, nb_obs1) :
     return (nb_obs0*sigma0 + nb_obs1*sigma1)/(nb_obs0+nb_obs1)
 
+muhat0 = muhat(0, testData, testLabel)
+sigmahat0 = sigmahat(0, testData, testLabel)
+pihat0 = pihat(0, testData, testLabel)
 
+muhat1 = muhat(1, testData, testLabel)
+sigmahat1 = sigmahat(1, testData, testLabel)
+pihat1 = pihat(1, testData, testLabel)
+
+weighted_Sigma_Hat = weighted_Sigma_Hat(sigmahat0, sigmahat1, 1000, 1000)
