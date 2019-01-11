@@ -74,3 +74,4 @@ sigmahat1 = sigmahat(1, testData, testLabel)
 pihat1 = pihat(1, testData, testLabel)
 
 weighted_Sigma_Hat = weighted_Sigma_Hat(sigmahat0, sigmahat1, 1000, 1000)
+InvertedWeighted_Sigma_Hat = np.linalg.inv(weighted_Sigma_Hat)
