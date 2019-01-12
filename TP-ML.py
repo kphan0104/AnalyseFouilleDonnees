@@ -6,72 +6,46 @@ import sklearn as sk
 
 np.random.seed(123)
 
-def generateData(mu, sigma, nb, classId, dataList, labelList):
-	data = np.random.multivariate_normal(mu, sigma, nb).tolist()
-	for i in range (0, nb):
-		dataList.append(data[i])
-	for i in range (0, nb):
-		labelList.append(classId)
-
-def getX(list):
-	return [x[0] for x in list]
-
-def getY(list):
-	return [y[1] for y in list]
-
-def getData(classId, dataList, labelList):
-	labelList = np.array(labelList)
-	return [dataList[i] for i in np.where(labelList == classId)[0]]
-
 mu0 = (0,0)
 mu1 = (3,2)
 sigma = [[1,1/2],[1/2,1]]
 
-learningData = []
-learningLabel = []
-generateData(mu0, sigma, 10, 0, learningData, learningLabel)
-generateData(mu1, sigma, 10, 1, learningData, learningLabel)
+def getData(mu0, mu1, sigma0, sigma1, nb, percentageC0):
+    
+    labels = np.concatenate((np.repeat(0,int(nb * percentageC0)) , np.repeat(1,int(nb * (1 - percentageC0)))), axis = None)
+    c0Data = np.random.multivariate_normal(mu0, sigma0, int(nb * percentageC0))
+    c1Data = np.random.multivariate_normal(mu1, sigma1, int(nb * (1 - percentageC0)))
+    cData  = np.concatenate((c0Data, c1Data), axis = 0)
+    return([cData, labels])
 
-testData = []
-testLabel = []
-generateData(mu0, sigma, 1000, 0, testData, testLabel)
-generateData(mu1, sigma, 1000, 1, testData, testLabel)
+mu0, mu1, sigma0, sigma1= mu0, mu1, sigma, sigma
 
+trainData, trainLabel = getData(mu0, mu1, sigma0, sigma1, 20, 0.5)
+testData, testLabel = getData(mu0, mu1, sigma0, sigma1, 2000, 0.5)
 
-#plt.scatter(getX(getData(0, learningData, learningLabel)), getY(getData(0, learningData, learningLabel)), c = "b")
-#plt.scatter(getX(getData(1, learningData, learningLabel)), getY(getData(1, learningData, learningLabel)), c = "r")
-plt.scatter(getX(getData(0, testData, testLabel)), getY(getData(0, testData, testLabel)), c = "b")
-plt.scatter(getX(getData(1, testData, testLabel)), getY(getData(1, testData, testLabel)), c = "r")
+plt.scatter(testData[:,0], testData[:,1], c = testLabel)
+#plt.scatter(getX(getData(1, testData, testLabel)), getY(getData(1, testData, testLabel)), c = "r")
 plt.show()
-
-
 
 ##### Analyse Discriminante Linéaire #####
 
-def muhat(classId, dataList, labelList):
-	dataClass = getData(classId, dataList, labelList)
-	return [sum(getX(dataClass)) / len(dataClass), sum(getY(dataClass)) / len(dataClass)]
+def muhat(classId, data, labelList):
+    dt  = data[labelList == classId]
+    res = np.sum(dt, axis=0)/len(dt)
+    return(res)
 
-def sigmahat(classId, dataList, labelList):
-	mu = np.array([muhat(classId, dataList, labelList)])
-	dataClass = getData(classId, dataList, labelList)
-	matrixList = [np.dot(np.transpose(np.array([x]) - mu), np.array([x]) - mu) for x in dataClass]
-	return sum(matrixList)/len(dataClass)
+def sigmahat(classId, data, labelList):
+    mu = muhat(classId, data, labelList)
+    dt = data[labelList == classId]
+    matrix = [np.dot(np.transpose(np.array([x]) - mu), np.array([x]) - mu) for x in dt]
+    return (sum(matrix)/len(dt))
 
-def pihat(classId, dataList, labelList):
-	dataClass = getData(classId, dataList, labelList)
-	return len(dataClass) / len(dataList)
+def pihat(classId, data, labelList):
+	dt = data [labelList == classId]
+	return len(dt)/len(data)
 
 def weighted_Sigma_Hat (sigma0, sigma1, nb_obs0, nb_obs1) :
     return (nb_obs0*sigma0 + nb_obs1*sigma1)/(nb_obs0+nb_obs1)
 
-muhat0 = muhat(0, testData, testLabel)
-sigmahat0 = sigmahat(0, testData, testLabel)
-pihat0 = pihat(0, testData, testLabel)
+#InvertedWeighted_Sigma_Hat = np.linalg.inv(weighted_Sigma_Hat)
 
-muhat1 = muhat(1, testData, testLabel)
-sigmahat1 = sigmahat(1, testData, testLabel)
-pihat1 = pihat(1, testData, testLabel)
-
-weighted_Sigma_Hat = weighted_Sigma_Hat(sigmahat0, sigmahat1, 1000, 1000)
-InvertedWeighted_Sigma_Hat = np.linalg.inv(weighted_Sigma_Hat)
