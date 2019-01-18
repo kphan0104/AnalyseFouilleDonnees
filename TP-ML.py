@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn as sk
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
 
 ##### Génération de données #####
 
@@ -24,7 +26,6 @@ trainData, trainLabel = getData(mu0, mu1, sigma0, sigma1, 20, 0.5)
 testData, testLabel = getData(mu0, mu1, sigma0, sigma1, 2000, 0.5)
 
 plt.scatter(testData[:,0], testData[:,1], c = testLabel)
-#plt.scatter(getX(getData(1, testData, testLabel)), getY(getData(1, testData, testLabel)), c = "r")
 plt.show()
 
 ##### Analyse Discriminante Linéaire #####
@@ -48,4 +49,56 @@ def weighted_Sigma_Hat (sigma0, sigma1, nb_obs0, nb_obs1) :
     return (nb_obs0*sigma0 + nb_obs1*sigma1)/(nb_obs0+nb_obs1)
 
 #InvertedWeighted_Sigma_Hat = np.linalg.inv(weighted_Sigma_Hat)
+
+def LDA(x, data, labelList) :
+    #moyenne
+    mu0 = muhat(0, data, labelList)
+    mu1 = muhat(1, data, labelList)
+    #covariance
+    sigma0 = sigmahat(0, data, labelList)
+    sigma1 = sigmahat(1, data, labelList)
+    
+    #covariance pondérée
+    sigma = weighted_Sigma_Hat(sigma0, sigma1, 10,10)
+    
+    #proportion des classes
+    pi0 = pihat(0, data, labelList)
+    pi1 = pihat(1, data, labelList)
+
+    delta0 = (np.dot(np.transpose(x), np.dot(np.linalg.inv(sigma), mu0))) - 0.5 * (np.dot(np.transpose(mu0),np.dot(np.linalg.inv(sigma), mu0))) + np.log10(pi0)
+    delta1 = (np.dot(np.transpose(x),np.dot(np.linalg.inv(sigma), mu1))) - 0.5 * (np.dot(np.transpose(mu1),np.dot(np.linalg.inv(sigma), mu1))) + np.log10(pi1)
+    
+    #décision
+    if (delta1 > delta0) :
+        return 1
+    else :
+        return 0
+
+def classificationRate(data, labelList, nb_obs0):
+    rightPrediction = 0
+        
+    for i in range(0, nb_obs0) :
+        if(LDA (np.transpose(np.asmatrix(data[i])), data, labelList) == 0) :
+            rightPrediction += 1
+    for i in range(nb_obs0,len(data)) :
+        if(LDA (np.transpose(np.asmatrix(data[i])), data, labelList) == 1) :
+            rightPrediction += 1
+    
+    rate = rightPrediction/len(data)
+    return rate
+
+def classificationRateUsingSklearn(data, labelList) :
+    rightPrediction = 0
+    clf = DiscrimantLinearAnalysis()
+    clf.fit(data, labelList)
+    for i in range(0, nb_obs0) :
+        if(clf.predict(np.asmatrix(data[i])) == 0) :
+            rightPrediction += 1
+    for i in range(nb_obs0,len(data)) :
+        if(clf.predict(np.asmatrix(data[i])) == 1) :
+            rightPrediction+= 1
+    rate = rightPrediction/len(data)
+    return rate
+
+print("LDA Apprentissage :",classificationRate(trainData, trainLabel, 10))
 
