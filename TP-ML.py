@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+import matplotlib.transforms as mtransforms
 import sklearn as sk
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+
 
 
 ##### Génération de données #####
@@ -101,4 +105,69 @@ def classificationRateUsingSklearn(data, labelList) :
     return rate
 
 print("LDA Apprentissage :",classificationRate(trainData, trainLabel, 10))
+print("LDA Test : ", classificationRate(testData, testLabel, 1000))
 
+#Tracer la frontière de décision 
+
+def decisionBoudary(data, labelList):
+    #means
+    mu0 = muhat(0, data, labelList)
+    mu1 = muhat(1, data, labelList)
+    #proportion of classes
+    pi0 = pihat(0, data, labelList)
+    pi1 = pihat(1, data, labelList)
+    #covariance
+    sigma0 = sigmahat(0, data, labelList)
+    sigma1 = sigmahat(1, data, labelList)
+    #weighted covariance 
+    sigma = weighted_Sigma_Hat(sigma0, sigma1, 10,10)
+    #x coefficient
+    w = np.dot(np.linalg.inv(sigma),(mu0-mu1))
+    #w coordinates 
+    alpha = w[0]
+    beta = w[1]
+    #b 
+    b = -0.5 * np.dot((mu0-mu1), np.dot(np.linalg.inv(sigma),(mu0+mu1))) + np.log10(pi0/pi1)
+    #x coordinates 
+    return [[0,-b/beta],[-b/alpha, 0]]
+
+def decisionBoudary(data, labelList):
+    #means
+    mu0 = muhat(0, data, labelList)
+    mu1 = muhat(1, data, labelList)
+    #proportion of classes
+    pi0 = pihat(0, data, labelList)
+    pi1 = pihat(1, data, labelList)
+    #covariance
+    sigma0 = sigmahat(0, data, labelList)
+    sigma1 = sigmahat(1, data, labelList)
+    #weighted covariance 
+    sigma = weighted_Sigma_Hat(sigma0, sigma1, 10,10)
+    #x coefficient
+    w = np.dot(np.linalg.inv(sigma),(mu0-mu1))
+    #w coordinates 
+    alpha = w[0]
+    beta = w[1]
+    #b 
+    b = -0.5 * np.dot((mu0-mu1), np.dot(np.linalg.inv(sigma),(mu0+mu1))) + np.log10(pi0/pi1)
+    #x coordinates 
+    return [[0,-b/beta],[-b/alpha, 0]]
+
+def drawDecisionBoundary(data, labelList) :
+    p1,p2    = decisionBoudary(data, labelList)
+    x_list   = [p1[0], p2[0]]
+    y_list   = [p1[1], p2[1]]
+    x_list2  = [p2[0], 2*p2[0] - p1[0]]
+    y_list2  = [p2[1], 2*p2[1] - p1[1]]
+    fig, ax = plt.subplots()
+    ax.scatter(data[:,0], data[:,1], c = labelList)
+    line = mlines.Line2D(x_list, y_list, color='black')
+    line2 = mlines.Line2D(x_list2, y_list2, color='black')
+    ax.add_line(line)
+    ax.add_line(line2)
+    plt.show()
+
+    
+    
+    
+    
