@@ -8,7 +8,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 
 
-##### Génération de données #####
+##### I\ Génération de données #####
 
 np.random.seed(123)
 
@@ -16,23 +16,22 @@ mu0 = (0,0)
 mu1 = (3,2)
 sigma = [[1,1/2],[1/2,1]]
 
-def getData(mu0, mu1, sigma0, sigma1, nb, percentageC0):
-    
-    labels = np.concatenate((np.repeat(0,int(nb * percentageC0)) , np.repeat(1,int(nb * (1 - percentageC0)))), axis = None)
-    c0Data = np.random.multivariate_normal(mu0, sigma0, int(nb * percentageC0))
-    c1Data = np.random.multivariate_normal(mu1, sigma1, int(nb * (1 - percentageC0)))
+def getData(mu0, mu1, sigma0, sigma1, nbObs0, nbObs1):
+    labels = np.concatenate((np.repeat(0,nbObs0) , np.repeat(1,nbObs1)), axis = None)
+    c0Data = np.random.multivariate_normal(mu0, sigma0, nbObs0)
+    c1Data = np.random.multivariate_normal(mu1, sigma1, nbObs1)
     cData  = np.concatenate((c0Data, c1Data), axis = 0)
     return([cData, labels])
 
 mu0, mu1, sigma0, sigma1= mu0, mu1, sigma, sigma
 
-trainData, trainLabel = getData(mu0, mu1, sigma0, sigma1, 20, 0.5)
-testData, testLabel = getData(mu0, mu1, sigma0, sigma1, 2000, 0.5)
+trainData, trainLabel = getData(mu0, mu1, sigma0, sigma1, 10, 10)
+testData, testLabel = getData(mu0, mu1, sigma0, sigma1, 1000, 1000)
 
-plt.scatter(testData[:,0], testData[:,1], c = testLabel)
-plt.show()
+#plt.scatter(testData[:,0], testData[:,1], c = testLabel)
+#plt.show()
 
-##### Analyse Discriminante Linéaire #####
+##### II\ Analyse Discriminante Linéaire #####
 
 def muhat(classId, data, labelList):
     dt  = data[labelList == classId]
@@ -49,8 +48,8 @@ def pihat(classId, data, labelList):
 	dt = data [labelList == classId]
 	return len(dt)/len(data)
 
-def weighted_Sigma_Hat (sigma0, sigma1, nb_obs0, nb_obs1) :
-    return (nb_obs0*sigma0 + nb_obs1*sigma1)/(nb_obs0+nb_obs1)
+def weighted_Sigma_Hat (sigma0, sigma1, nbObs0, nbObs1) :
+    return np.dot((np.dot(nbObs0,sigma0) + np.dot(nbObs1,sigma1)), 1/(nbObs0+nbObs1))
 
 #InvertedWeighted_Sigma_Hat = np.linalg.inv(weighted_Sigma_Hat)
 
@@ -78,14 +77,12 @@ def LDA(x, data, labelList) :
     else :
         return 0
 
-def classificationRate(data, labelList, nb_obs0):
+
+def classificationRate(data, labelList):
     rightPrediction = 0
-        
-    for i in range(0, nb_obs0) :
-        if(LDA (np.transpose(np.asmatrix(data[i])), data, labelList) == 0) :
-            rightPrediction += 1
-    for i in range(nb_obs0,len(data)) :
-        if(LDA (np.transpose(np.asmatrix(data[i])), data, labelList) == 1) :
+
+    for i in range(0, len(data)) :
+        if(LDA (np.transpose(np.asmatrix(data[i])), data, labelList) == labelList[i]) :
             rightPrediction += 1
     
     rate = rightPrediction/len(data)
@@ -93,19 +90,27 @@ def classificationRate(data, labelList, nb_obs0):
 
 def classificationRateUsingSklearn(data, labelList) :
     rightPrediction = 0
-    clf = DiscrimantLinearAnalysis()
+    clf = LinearDiscriminantAnalysis()
     clf.fit(data, labelList)
-    for i in range(0, nb_obs0) :
-        if(clf.predict(np.asmatrix(data[i])) == 0) :
+
+    for i in range(0, len(data)) :
+        if(clf.predict(np.asmatrix(data[i])) == labelList[i]) :
             rightPrediction += 1
-    for i in range(nb_obs0,len(data)) :
-        if(clf.predict(np.asmatrix(data[i])) == 1) :
-            rightPrediction+= 1
+
     rate = rightPrediction/len(data)
     return rate
 
-print("LDA Apprentissage :",classificationRate(trainData, trainLabel, 10))
-print("LDA Test : ", classificationRate(testData, testLabel, 1000))
+#print("LDA Apprentissage Rate: ",classificationRate(trainData, trainLabel))
+#print("LDA Test Rate: ", classificationRate(testData, testLabel))
+#print("LDA SKLEARN Apprentissage Rate: ", classificationRateUsingSklearn(trainData, trainLabel))
+#print("LDA SKLEARN Test Rate: ", classificationRateUsingSklearn(testData, testLabel))
+
+trainData[0] = [-10]
+#print(muhat(0, trainData, trainLabel))
+#print(sigmahat(0, trainData, trainLabel))
+#print(weighted_Sigma_Hat(sigma0, sigma1, 10, 10))
+#print("LDA Apprentissage Rate: ",classificationRate(trainData, trainLabel))
+#print("LDA Test Rate: ", classificationRate(testData, testLabel))
 
 #Tracer la frontière de décision 
 
@@ -167,7 +172,102 @@ def drawDecisionBoundary(data, labelList) :
     ax.add_line(line2)
     plt.show()
 
+### Les performances de l'analyse discriminante linéiare vont décroitre lorsque :
+## - le nombre d'observations dans les données d'apprentissage est faible
+## - les matrices de covariance entre les classes sotn très différentes
+
+
+### Cette méthode généralise LDA pour lambda = 1 (et sigma1=sigma2)
+
+
+###################################
+
+def LDA(x):
+    #moyenne
+    mu0 = muhat(0, trainData, trainLabel)
+    mu1 = muhat(1, trainData, trainLabel)
+    #covariance
+    sigma0 = sigmahat(0, trainData, trainLabel)
+    sigma1 = sigmahat(1, trainData, trainLabel)
     
+    #covariance pondérée
+    sigma = weighted_Sigma_Hat(sigma0, sigma1, len(trainLabel == 0),len(trainLabel == 1))
     
+    #proportion des classes
+    pi0 = pihat(0, trainData, trainLabel)
+    pi1 = pihat(1, trainData, trainLabel)
+
+    delta0 = (np.dot(np.transpose(x), np.dot(np.linalg.inv(sigma), mu0))) - 0.5 * (np.dot(np.transpose(mu0),np.dot(np.linalg.inv(sigma), mu0))) + np.log10(pi0)
+    delta1 = (np.dot(np.transpose(x),np.dot(np.linalg.inv(sigma), mu1))) - 0.5 * (np.dot(np.transpose(mu1),np.dot(np.linalg.inv(sigma), mu1))) + np.log10(pi1)
     
+    #décision
+    if (delta1 > delta0) :
+        return 1
+    else :
+        return 0
+
+
+def classificationRateBis(data, labelList):
+    rightPrediction = 0
+
+    for i in range(0, len(data)) :
+        if(LDA (np.transpose(np.asmatrix(data[i]))) == labelList[i]) :
+            rightPrediction += 1
     
+    rate = rightPrediction/len(data)
+    return rate
+
+#print(classificationRateBis(testData, testLabel))
+
+###################################
+
+def variantWeightedSigmaHat (sigma0, sigma1, nbObs0, nbObs1, param) :
+    return np.dot(param, np.dot((np.dot(nbObs0,sigma0) + np.dot(nbObs1,sigma1)), 1/(nbObs0+nbObs1))) + np.dot((1-param), np.identity(2))
+
+def variantLDA(x, param):
+    #moyenne
+    mu0 = muhat(0, trainData, trainLabel)
+    mu1 = muhat(1, trainData, trainLabel)
+    #covariance
+    sigma0 = sigmahat(0, trainData, trainLabel)
+    sigma1 = sigmahat(1, trainData, trainLabel)
+    
+    #covariance pondérée
+    sigma = variantWeightedSigmaHat(sigma0, sigma1, len(trainLabel == 0),len(trainLabel == 1), param)
+    
+    #proportion des classes
+    pi0 = pihat(0, trainData, trainLabel)
+    pi1 = pihat(1, trainData, trainLabel)
+
+    delta0 = (np.dot(np.transpose(x), np.dot(np.linalg.inv(sigma), mu0))) - 0.5 * (np.dot(np.transpose(mu0),np.dot(np.linalg.inv(sigma), mu0))) + np.log10(pi0)
+    delta1 = (np.dot(np.transpose(x),np.dot(np.linalg.inv(sigma), mu1))) - 0.5 * (np.dot(np.transpose(mu1),np.dot(np.linalg.inv(sigma), mu1))) + np.log10(pi1)
+    
+    #décision
+    if (delta1 > delta0) :
+        return 1
+    else :
+        return 0
+
+def classificationRateBis2(data, labelList, param):
+    rightPrediction = 0
+
+    for i in range(0, len(data)) :
+        if(variantLDA(np.transpose(np.asmatrix(data[i])), param) == labelList[i]) :
+            rightPrediction += 1
+    
+    rate = rightPrediction/len(data)
+    return rate
+
+#print(classificationRateBis2(testData, testLabel, 0.5))
+#print(classificationRateBis2(testData, testLabel, 1)) ## classic LDA
+
+
+def variantLDAGraph():
+    graph = []
+    for i in range (0, 101) : 
+        graph.append([i*0.01, classificationRateBis2(testData, testLabel, i*0.01)])
+    numpyGraph = np.array(graph)
+    plt.scatter(numpyGraph[:,0], numpyGraph[:,1])
+    plt.show()
+
+variantLDAGraph()
