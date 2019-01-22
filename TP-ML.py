@@ -286,7 +286,7 @@ def crossValidation(dataList, labelList) :
 #Le SVM est une méthode de classification très performante quand on dispose de peu de données d'entraînement. 
 #2ème classifieur : Random Forest
 
-from sklearn.datasets.samples_generator import make_blobs
+from sklearn.datasets.samples_generator import make_moons
 from sklearn.ensemble import RandomForestClassifier
 ##############################################################################@
 
@@ -294,7 +294,7 @@ from sklearn.ensemble import RandomForestClassifier
 #generate dataset
 
 trainData, trainLabel = make_moons(n_samples=100)
-testData, testLabel = make_blobs(n_samples=100)
+testData, testLabel = make_moons(n_samples=100)
 
 #Performing LDA
 clfLDA = LinearDiscriminantAnalysis()
