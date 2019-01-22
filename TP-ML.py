@@ -286,15 +286,17 @@ def crossValidation(dataList, labelList) :
 #Le SVM est une méthode de classification très performante quand on dispose de peu de données d'entraînement. 
 #2ème classifieur : Random Forest
 
-from sklearn.datasets.samples_generator import make_moons
+from sklearn.datasets.samples_generator import make_blobs
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
+
 ##############################################################################@
 
 #Qu2 :
 #generate dataset
 
 trainData, trainLabel = make_moons(n_samples=100)
-testData, testLabel = make_moons(n_samples=100)
+testData, testLabel = make_blobs(n_samples=100)
 
 #Performing LDA
 clfLDA = LinearDiscriminantAnalysis()
@@ -303,14 +305,12 @@ print("LDA performance test data: ",clfLDA.fit(trainData, trainLabel).score(test
 
 #Performing SVM
 clfSVM = svm.SVC(gamma='scale')
-print("SVM performance train data : "clfSVM.fit(trainData, trainLabel).score(trainData, trainLabel))
-print("SVM performance test data : "clfSVM.fit(trainData, trainLabel).score(testData, testLabel))
+print("SVM performance train data : ",clfSVM.fit(trainData, trainLabel).score(trainData, trainLabel))
+print("SVM performance test data : ",clfSVM.fit(trainData, trainLabel).score(testData, testLabel))
 
 #Performing The Random Forest Algorithm
 clfRFC = RandomForestClassifier(n_estimators=10, max_depth=2,random_state=0)
-print("Random Forest Class. performance train data : "clfRFC.fit(trainData, trainLabel).score(trainData, trainLabel))
-print("Random Forest Class. performance test data : "clfRFC.fit(trainData, trainLabel).score(testData, testLabel))
+print("Random Forest Class. performance train data : ",clfRFC.fit(trainData, trainLabel).score(trainData, trainLabel))
+print("Random Forest Class. performance test data : ",clfRFC.fit(trainData, trainLabel).score(testData, testLabel))
 
 ##############################################################################@
-
-display(trainData, trainLabel)
