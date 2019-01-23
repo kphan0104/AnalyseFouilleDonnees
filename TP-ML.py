@@ -313,4 +313,69 @@ clfRFC = RandomForestClassifier(n_estimators=10, max_depth=2,random_state=0)
 print("Random Forest Class. performance train data : ",clfRFC.fit(trainData, trainLabel).score(trainData, trainLabel))
 print("Random Forest Class. performance test data : ",clfRFC.fit(trainData, trainLabel).score(testData, testLabel))
 
+#On remarque que le SVM et LE Random Forest Algorithm sont très efficace contrairement
+#quand on ne dispose que de peu de données d’entraînement
+
+
+
 ##############################################################################@
+
+
+#Qu 3 : 
+
+#Notre jeu de données ".txt" contient 15 observations d'une grue qui transporte des conteneurs
+#d'un point à un autre (2 attributs prédictifs : Speed, Angle + attibut target : Power).
+#Speed : Vitesse de déplacement du conteneur: faible, moyenne et élevée 
+#(faible: 1, 2, 3; moyenne: 6, 7, 8; élevée: 9, 10). 
+#Angle: grand angle négatif, petit angle négatif, angle zéro, petit angle positif et grand angle positif. 
+#Puissance: faible, moyenne et élevée (basse: 0,3; moyenne: 0,5; haute: 0,7). 
+#L'exercice à faire sur ce jeu de données, est celui de prédire 
+#la puissance de la grue en fonction de la vitesse et de l'angle afin d'éviter un accident causé potentiellement 
+#par la vitesse
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+
+#jeu de données sous-forme de table : 
+
+grue_conteneur = pd.DataFrame(pd.read_csv("grue_conteneur.csv"), columns = ["Speed", "Angle", "Power"])
+grue_conteneur.head(15)
+
+##############################################################################
+
+
+
+
+#Qu 4 :
+data  = grue_conteneur[["Speed", "Angle"]]
+label = grue_conteneur["Power"]
+
+trainData, testData, trainLabel, testLabel = train_test_split(data, label, test_size = 7) 
+
+#Performing LDA
+clfLDA = LinearDiscriminantAnalysis()
+print("LDA grue_conteneur train data : ",clfLDA.fit(trainData, trainLabel).score(trainData, trainLabel))
+print("LDA grue_conteneur test data: ",clfLDA.fit(trainData, trainLabel).score(testData, testLabel))
+
+#Performing SVM
+clfSVM = svm.SVC(gamma='scale')
+print("SVM grue_conteneur train data : ",clfSVM.fit(trainData, trainLabel).score(trainData, trainLabel))
+print("SVM grue_conteneur test data : ",clfSVM.fit(trainData, trainLabel).score(testData, testLabel))
+
+#Performing The Random Forest Algorithm
+clfRFC = RandomForestClassifier(n_estimators=10, max_depth=2,random_state=0)
+print("Random Forest Class. grue_conteneur train data : ",clfRFC.fit(trainData, trainLabel).score(trainData, trainLabel))
+print("Random Forest Class. grue_conteneur test data : ",clfRFC.fit(trainData, trainLabel).score(testData, testLabel))
+
+#Cross Validation 
+
+
+
+
+
+
+
+#Comparison
+
